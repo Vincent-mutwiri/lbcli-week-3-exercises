@@ -10,7 +10,7 @@ transaction="02000000000104b5f641e80e9065f09b12f3e373072518885d1bd1ddd9298e5b984
 # i.e. hex pattern: 0121(02|03)<64 hex>
 mapfile -t PUBKEYS < <(
   echo "$transaction" \
-  | grep -oE '0121(02|03)[0-9a-fA-F]{64}' \
+  | grep -oiE '0121(02|03)[0-9a-f]{64}' \
   | sed 's/^0121//' \
   | head -n 4
 )
@@ -27,31 +27,37 @@ for pk in "${PUBKEYS[@]}"; do
 done
 redeem+="54ae"
 
-# HASH160(redeemScript)
-hash160=$(echo -n "$redeem" | xxd -r -p | openssl dgst -sha256 -binary | openssl dgst -rmd160 -binary | xxd -p -c 256)
-
-# Base58Check encode for P2SH testnet/regtest: version 0xc4
-payload_hex="c4${hash160}"
-checksum_hex=$(echo -n "$payload_hex" | xxd -r -p | openssl dgst -sha256 -binary | openssl dgst -sha256 -binary | xxd -p -c 256 | cut -c1-8)
-addr_hex="${payload_hex}${checksum_hex}"
-
+# Do HASH160 + Base58Check in python for portability.
 python3 - <<PY
+import hashlib
+
 alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
-hexstr = '${addr_hex}'
-b = bytes.fromhex(hexstr)
 
-n = int.from_bytes(b, 'big')
-out = ''
-while n > 0:
-    n, rem = divmod(n, 58)
-    out = alphabet[rem] + out
+def b58encode(b: bytes) -> str:
+    n = int.from_bytes(b, 'big')
+    out = ''
+    while n > 0:
+        n, rem = divmod(n, 58)
+        out = alphabet[rem] + out
 
-pad = 0
-for c in b:
-    if c == 0:
-        pad += 1
-    else:
-        break
+    pad = 0
+    for c in b:
+        if c == 0:
+            pad += 1
+        else:
+            break
 
-print('1' * pad + out)
+    return ('1' * pad) + out
+
+redeem_hex = "${redeem}"
+redeem = bytes.fromhex(redeem_hex)
+
+sha = hashlib.sha256(redeem).digest()
+h160 = hashlib.new('ripemd160', sha).digest()
+
+# P2SH testnet/regtest version byte 0xc4
+payload = b"\xc4" + h160
+checksum = hashlib.sha256(hashlib.sha256(payload).digest()).digest()[:4]
+
+print(b58encode(payload + checksum))
 PY
