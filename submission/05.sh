@@ -24,3 +24,4 @@ OUTPUTS='{"2MvLcssW49n9atmksjwg2ZCMsEMsoj3pzUP":0.20000000}'
 PSBT=$(bitcoin-cli -regtest createpsbt "$INPUTS" "$OUTPUTS")
 
 echo "$PSBT"
+
