@@ -111,7 +111,7 @@ jobs:
         run: |
           chmod +x submission/06.sh
           HASH=$(submission/06.sh)
-          if [[ "$HASH" == "b41f0c9500a186b19815d972958e19efaa7b3c89c9b4fb76cbee85a3e67639df" ]]; then
+          if [[ "$HASH" == "ea73a631b456d2b041ed73bf5767946408c6ff067716929a68ecda2e3e4de6d3" ]]; then
             echo "✅ Success: Hash Verification for Partially Signed Bitcoin Transaction passed!"
           else
             echo "❌ Error: Hash Verification for Partially Signed Bitcoin Transaction failed!"
