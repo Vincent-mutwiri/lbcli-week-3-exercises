@@ -30,6 +30,10 @@ jobs:
           fi
           sudo bash .github/setup.sh
 
+      - name: Add Bitcoin Core to PATH
+        run: |
+          echo "${GITHUB_WORKSPACE}/bitcoin-28.0/bin" >> $GITHUB_PATH
+
       - name: Start bitcoind in regtest mode
         run: |
           bitcoind -regtest -daemon
