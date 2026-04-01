@@ -107,6 +107,18 @@ jobs:
             exit 1
           fi
 
+      - name: Debug 06.sh (show commit + file contents)
+        run: |
+          echo "GITHUB_SHA=$GITHUB_SHA"
+          echo "--- submission/06.sh (first 40 lines) ---"
+          nl -ba submission/06.sh | sed -n '1,40p'
+          echo "--- grep for heredoc terminator 'PY' ---"
+          if grep -n "^PY$" -n submission/06.sh; then
+            echo "Found a bare 'PY' line in 06.sh"
+          else
+            echo "No bare 'PY' line in 06.sh"
+          fi
+
       - name: 06.sh - Verify Hash for Partially Signed Bitcoin Transaction
         run: |
           chmod +x submission/06.sh
